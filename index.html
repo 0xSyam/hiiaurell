@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kejutan Ulang Tahun! 🎁</title>
+    <!-- Import Font Lucu & Estetik -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Gaegu:wght@400;700&family=Indie+Flower&family=Varela+Round&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* TEMA: Gradient Pink Estetik */
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #ffc1cc 100%);
+            font-family: 'Varela Round', sans-serif;
+            user-select: none;
+            touch-action: none; /* Mencegah zoom/scroll saat main game */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            z-index: 1; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* --- BACKGROUND EMOJI --- */
+        #emoji-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; 
+            pointer-events: none; 
+        }
+        #emoji-bg div { 
+            position: absolute; 
+            font-size: 2rem; 
+            opacity: 0.6; 
+            animation: floatUp 15s linear infinite; 
+            filter: sepia(0.3) hue-rotate(300deg);
+        }
+        @keyframes floatUp { 
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 
+            20% { opacity: 0.7; }
+            80% { opacity: 0.7; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } 
+        }
+
+        /* --- INTRO OVERLAY (SURAT) --- */
+        #intro-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 240, 245, 0.65); 
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease-out;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .envelope-container {
+            position: relative; cursor: pointer; transition: transform 0.3s; z-index: 101;
+            /* Responsive Scale */
+            transform-origin: center;
+        }
+        .envelope-container:hover { transform: scale(1.05) rotate(2deg); }
+
+        .envelope {
+            width: 320px; height: 220px; 
+            background: linear-gradient(to bottom right, #ffdde1, #ee9ca7);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
+            position: relative;
+        }
+        .flap {
+            position: absolute; top: 0; left: 0; width: 0; height: 0; 
+            border-left: 160px solid transparent; border-right: 160px solid transparent;
+            border-top: 120px solid #ffb7b2; 
+            transform-origin: top; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5;
+        }
+        .pocket {
+            position: absolute; bottom: 0; left: 0; width: 0; height: 0; 
+            border-left: 160px solid #ffc3a0; border-right: 160px solid #ffc3a0;
+            border-top: 110px solid transparent; border-bottom: 110px solid #ffafbd;
+            border-radius: 0 0 15px 15px; z-index: 4;
+        }
+        .letter {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 280px; height: 200px; 
+            background: #fff0f5;
+            border-radius: 10px; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center; z-index: 3;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            background-image: radial-gradient(#ffb7b2 1px, transparent 1px); background-size: 15px 15px;
+        }
+        .open .flap { transform: rotateX(180deg); z-index: 1; }
+        .open .letter { transform: translateX(-50%) translateY(-130px); z-index: 6; }
+
+        .btn-style {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); 
+            color: #fff; border: none; padding: 12px 30px;
+            border-radius: 50px; cursor: pointer; font-family: 'Fredoka One', cursive;
+            font-size: 1.1rem; letter-spacing: 1px;
+            box-shadow: 0 5px 0 #ff7eb9; transition: transform 0.1s, box-shadow 0.1s;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-style:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #ff7eb9; }
+        .btn-style:active { transform: translateY(2px); box-shadow: 0 2px 0 #ff7eb9; }
+
+        /* --- MEMORY PAGE --- */
+        #memory-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #fff0f5; 
+            background-image: 
+                linear-gradient(#ffc2d1 1px, transparent 1px),
+                linear-gradient(90deg, #ffc2d1 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center;
+            z-index: 50; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 30px 20px; box-sizing: border-box;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease-in-out;
+            overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #memory-page.active { opacity: 1; pointer-events: auto; }
+
+        .journal-container {
+            width: 100%; max-width: 450px; position: relative;
+            animation: popUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding-bottom: 50px; /* Space for scroll */
+        }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .polaroid-wrapper {
+            background: #fffcf5; 
+            padding: 10px 10px 40px 10px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+            transform: rotate(-3deg); margin: 10px auto 20px auto;
+            width: 180px; position: relative;
+            border: 1px solid #ffe4e1;
+        }
+        .polaroid-wrapper img { width: 100%; height: auto; display: block; border: 1px solid #ffe4e1; }
+        
+        .tape {
+            position: absolute; width: 80px; height: 25px;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            top: -10px; left: 50%; transform: translateX(-50%) rotate(2deg);
+            opacity: 0.9;
+        }
+
+        .handwritten-title {
+            font-family: 'Indie Flower', cursive; font-size: 2.2rem; color: #ff6b8b;
+            text-align: center; margin: 10px 0; text-shadow: 2px 2px 0 #fff0f5;
+            transform: rotate(2deg);
+        }
+
+        .journal-text {
+            background: #fffafc;
+            padding: 20px; border-radius: 15px;
+            border: 2px dashed #ffafcc;
+            font-family: 'Gaegu', cursive; font-size: 1.2rem; color: #664455;
+            line-height: 1.5; position: relative; margin-bottom: 20px;
+            box-shadow: 5px 5px 0 #ffc2d1;
+            min-height: 200px;
+        }
+        /* Cursor Typewriter */
+        .cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .sticker { position: absolute; pointer-events: none; animation: floatSticker 3s ease-in-out infinite; z-index: 10; }
+        .s-1 { top: -10px; right: -5px; font-size: 2.5rem; animation-delay: 0s; }
+        .s-2 { bottom: -10px; left: -10px; font-size: 2rem; animation-delay: 1s; }
+        .s-3 { top: 40%; right: -25px; font-size: 1.8rem; animation-delay: 0.5s; }
+        @keyframes floatSticker { 0%,100%{transform:translateY(0) rotate(0);} 50%{transform:translateY(-10px) rotate(5deg);} }
+
+        .btn-next {
+            background: linear-gradient(to right, #ff9ebb, #ff8fab); color: #fff; box-shadow: 0 5px 0 #ff7eb9;
+            display: block; margin: 0 auto 30px auto;
+            opacity: 0; transition: opacity 0.5s; /* Hidden until typewriter finishes */
+        }
+        .btn-next.visible { opacity: 1; }
+        .btn-next:hover { box-shadow: 0 7px 0 #ff7eb9; filter: brightness(1.05); }
+
+        /* --- UI LAYER 3D --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 60;
+        }
+
+        .message-container {
+            text-align: center; opacity: 0; transform: scale(0.5);
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto; 
+            position: absolute; top: 8%; width: 90%;
+        }
+        .message-container.visible { opacity: 1; transform: scale(1); }
+
+        .bottom-controls {
+            position: absolute; bottom: 30px; width: 90%;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            opacity: 0; transform: translateY(50px);
+            transition: all 0.8s ease-out;
+            pointer-events: none;
+            z-index: 61;
+        }
+        .bottom-controls.visible { 
+            opacity: 1; transform: translateY(0); 
+            pointer-events: auto; 
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive; font-size: 2.5rem; color: #ff8fab;
+            -webkit-text-stroke: 3px #fff; text-shadow: 3px 3px 0px #ffc2d1;
+            margin: 0; animation: wiggle 2s ease-in-out infinite;
+        }
+        @keyframes wiggle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+        .hint-bubble {
+            font-family: 'Gaegu', cursive; font-size: 1.3rem; color: #664455;
+            background: #fff0f5; padding: 10px 20px; border-radius: 20px;
+            margin-top: 10px; border: 2px solid #ffafcc;
+            box-shadow: 3px 3px 0 #ffafcc;
+        }
+
+        #action-hint {
+            position: absolute; bottom: 15%; font-size: 1.2rem; color: #fff;
+            background: linear-gradient(45deg, #ff8fab, #ffc2d1); 
+            padding: 10px 25px; border-radius: 50px;
+            animation: bounce 1.5s infinite; pointer-events: none; transition: opacity 0.5s;
+            font-family: 'Fredoka One', cursive; border: 3px solid #fff; opacity: 0;
+            box-shadow: 0 4px 10px rgba(255, 143, 171, 0.4);
+        }
+        #action-hint.visible { opacity: 1; }
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
+
+        #white-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff0f5; z-index: 200; pointer-events: none; opacity: 0;
+            transition: opacity 1.5s ease-out; 
+        }
+
+        /* --- MINI GAME STYLES --- */
+        #game-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 240, 245, 0.95);
+            z-index: 300; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        
+        #game-ui {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 20px;
+            box-sizing: border-box; pointer-events: none;
+        }
+        
+        .game-score {
+            font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: #ff5c8d;
+            text-shadow: 2px 2px 0 #fff;
+        }
+
+        #btn-close-game {
+            pointer-events: auto;
+            background: #ff5c8d; color: white; border: none;
+            width: 40px; height: 40px; border-radius: 50%;
+            font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 0 #c9184a;
+        }
+
+        #game-canvas {
+            background: transparent;
+            touch-action: none;
+            width: 100%; height: 100%;
+        }
+
+        #game-over-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #fff; padding: 25px; border-radius: 20px;
+            text-align: center; border: 4px solid #ffafcc;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none; width: 85%; max-width: 350px;
+        }
+
+        #game-over-panel h2 {
+            font-family: 'Fredoka One'; color: #ff5c8d; margin-top: 0; font-size: 1.8rem;
+        }
+
+        /* --- MEDIA QUERIES FOR MOBILE RESPONSIVENESS --- */
+        @media (min-width: 768px) {
+            .envelope { width: 350px; height: 240px; }
+            .letter { width: 310px; height: 210px; }
+            .flap { border-left-width: 175px; border-right-width: 175px; border-top-width: 130px; }
+            .pocket { border-left-width: 175px; border-right-width: 175px; border-bottom-width: 120px; }
+            .polaroid-wrapper { width: 220px; margin: 20px auto; }
+            h1 { font-size: 3.5rem; }
+            .handwritten-title { font-size: 2.8rem; }
+            .journal-text { font-size: 1.3rem; padding: 30px; }
+            .message-container { top: 5%; }
+            #action-hint { font-size: 1.4rem; bottom: 10%; }
+        }
+
+        /* Kecilkan tombol di HP */
+        @media (max-width: 480px) {
+            .btn-style { padding: 10px 20px; font-size: 1rem; width: 100%; }
+            .bottom-controls { width: 80%; }
+            .envelope { transform: scale(0.9); }
+        }
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- AUDIO ELEMENT -->
+    <audio id="bg-music" loop>
+        <!-- Ganti musik ke instrumen piano yang 'haru' dan bahagia (Sweet Memories) -->
+        <source src="https://cdn.pixabay.com/download/audio/2023/06/21/audio_4966d5b035.mp3?filename=sweet-memories-153406.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- SCENE 1: ENVELOPE OVERLAY -->
+    <div id="intro-overlay">
+        <div class="envelope-container" id="envelope-wrapper">
+            <div class="envelope">
+                <div class="letter">
+                    <h2 style="font-family: 'Indie Flower'; color: #ff6b8b; font-size: 2rem; margin: 10px 0;">For You ❤️</h2>
+                    <p style="font-family: 'Gaegu'; font-size: 1.2rem; color: #885566; margin-bottom: 20px;">Ada pesan rahasia di dalam sini. Buka yuk!</p>
+                    <button class="btn-style" id="btn-open-world">Open Me!</button>
+                </div>
+                <div class="pocket"></div>
+                <div class="flap"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCENE 2: MEMORY PAGE (Aesthetic Journal) -->
+    <div id="memory-page">
+        <div class="journal-container">
+            <div class="sticker s-1">✨</div>
+            <div class="sticker s-2">🌸</div>
+            <div class="sticker s-3">💖</div>
+
+            <div class="polaroid-wrapper">
+                <div class="tape"></div>
+                <!-- Mengubah seed avatar menjadi Aurell -->
+                <img src="aurell.jpg" alt="Foto Kenangan">
+            </div>
+            
+            <h2 class="handwritten-title">Happy Birthday, Aurell!</h2>
+            
+            <!-- Typewriter Target -->
+            <div class="journal-text cursor" id="journal-content">
+                <!-- Teks ini akan dikosongkan oleh JS dan diketik ulang -->
+                Hai, Aurell sayang! 🎉✨<br><br>
+                Selamat ulang tahun ya! Hari ini bukan cuma sekadar tanggal di kalender yang berubah, tapi hari di mana dunia jadi lebih indah karena kehadiranmu. Aku bener-bener bersyukur Tuhan ngirim kamu ke dunia ini.<br><br>
+                Terima kasih ya udah jadi Aurell yang hebat, yang kuat, dan yang selalu punya cara buat bikin orang di sekitar kamu tersenyum. Makasih udah bertahan sampai sejauh ini dan jadi versi terbaik dari dirimu.<br><br>
+                Di usiamu yang baru ini, doaku buat kamu nggak putus-putus. Semoga hari-harimu selalu dipenuhi warna-warni kebahagiaan, semoga pundakmu selalu diringankan, dan semoga semua mimpi-mimpi cantikmu satu per satu jadi kenyataan.<br><br>
+                Inget ya cantik, di setiap langkah kamu, ada aku yang selalu dukung dan bangga sama kamu. <i>You are loved, truly and deeply.</i><br><br>
+                Semoga tahun ini jadi tahun termanismu ya. Happy Level Up, Kesayanganku! ❤️<br><br>
+                <b style="color: #ff6b8b;">~ With Love, Hisyam</b>
+            </div>
+
+            <button class="btn-style btn-next" id="btn-to-cake">Go to Surprise! 🎂</button>
+        </div>
+    </div>
+
+    <!-- MINI GAME OVERLAY -->
+    <div id="game-overlay">
+        <div id="game-ui">
+            <div class="game-score">Score: <span id="current-score">0</span></div>
+            <button id="btn-close-game">X</button>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="game-over-panel">
+            <h2>Game Over! 🎮</h2>
+            <p style="font-family: 'Gaegu'; font-size: 1.5rem;">Skor Kamu: <span id="final-score">0</span></p>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
+                <button id="btn-restart" class="btn-style">Main Lagi</button>
+                <button id="btn-quit" class="btn-style" style="background: #ccc; box-shadow: 0 5px 0 #999;">Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="white-flash"></div>
+    <div id="emoji-bg"></div>
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div class="message-container" id="final-message">
+            <h1 id="wish-title">Make a Wish!</h1>
+            <div class="hint-bubble" id="wish-text">Semoga semua harapanmu terkabul! 🕯️✨</div>
+        </div>
+        
+        <!-- TOMBOL-TOMBOL DI BAWAH KUE -->
+        <div class="bottom-controls" id="controls-area">
+            <button id="btn-blow-candle" class="btn-style" style="background: linear-gradient(45deg, #ffd700, #ffcc00); color: #8a6d3b;">Tiup Lilin 🌬️</button>
+            <button id="btn-play-game" class="btn-style">Main Game "Tangkap Kado" 🎮</button>
+            <button id="btn-horror-game" class="btn-style" style="background: linear-gradient(45deg, #2c3e50, #000000); box-shadow: 0 5px 0 #1a252f;">Jangan Klik Ini 👻</button>
+        </div>
+
+        <div id="action-hint">👆 Klik Bukunya!</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- GLOBAL VARIABLES ---
+        let appState = 'INTRO'; 
+        let scene, camera, renderer, controls;
+        let cakeGroup, bookGroup, flameMesh, warpStars;
+        let bookPivot; 
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const bgMusic = document.getElementById('bg-music');
+
+        // --- TYPEWRITER VARIABLES ---
+        const journalTextEl = document.getElementById('journal-content');
+        const originalTextHTML = journalTextEl.innerHTML; // Simpan HTML asli
+        journalTextEl.innerHTML = ""; // Kosongkan saat awal
+
+        // --- SOUND SYNTHESIS FUNCTIONS (For SFX) ---
+        function playTone(freq, duration, type='sine') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            osc.start(now);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.stop(now + duration);
+        }
+
+        function playWarpSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 1.5);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+        }
+
+        function playHappyBirthday() {
+            const tempo = 0.25; 
+            const notes = [
+                { f: 523.25, d: 1 }, { f: 523.25, d: 1 }, { f: 587.33, d: 2 }, { f: 523.25, d: 2 }, { f: 698.46, d: 2 }, { f: 659.25, d: 4 }, 
+                { f: 523.25, d: 1 }, { f: 523.25, d: 1 }, { f: 587.33, d: 2 }, { f: 523.25, d: 2 }, { f: 783.99, d: 2 }, { f: 698.46, d: 4 }
+            ];
+            let time = 0;
+            notes.forEach(note => {
+                setTimeout(() => playTone(note.f, note.d * tempo, 'triangle'), time * 1000);
+                time += note.d * tempo + 0.1;
+            });
+        }
+
+        // --- DOM ELEMENTS ---
+        const envelope = document.getElementById('envelope-wrapper');
+        const btnOpen = document.getElementById('btn-open-world');
+        const overlay = document.getElementById('intro-overlay');
+        const hintText = document.getElementById('action-hint');
+        const memoryPage = document.getElementById('memory-page');
+        const btnToCake = document.getElementById('btn-to-cake');
+        const whiteFlash = document.getElementById('white-flash');
+        
+        // --- GAME ELEMENTS ---
+        const btnPlayGame = document.getElementById('btn-play-game');
+        const btnHorrorGame = document.getElementById('btn-horror-game'); 
+        const btnBlowCandle = document.getElementById('btn-blow-candle'); 
+        const controlsArea = document.getElementById('controls-area'); 
+        const wishTitle = document.getElementById('wish-title');
+        const wishText = document.getElementById('wish-text');
+
+        const gameOverlay = document.getElementById('game-overlay');
+        const gameCanvas = document.getElementById('game-canvas');
+        const ctx = gameCanvas.getContext('2d');
+        const scoreEl = document.getElementById('current-score');
+        const gameOverPanel = document.getElementById('game-over-panel');
+        const finalScoreEl = document.getElementById('final-score');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnQuit = document.getElementById('btn-quit');
+        const btnCloseGame = document.getElementById('btn-close-game');
+
+        let gameRunning = false;
+        let score = 0;
+        let playerX = 0;
+        let items = [];
+        let animationFrameId;
+
+        // Resize Canvas
+        function resizeGameCanvas() {
+            gameCanvas.width = window.innerWidth;
+            gameCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeGameCanvas);
+
+        // --- EVENT LISTENERS ---
+
+        envelope.addEventListener('click', () => {
+            if (appState === 'INTRO') {
+                envelope.classList.add('open');
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+            }
+        });
+
+        // ACTION: Buka Surat & Mainkan Musik
+        btnOpen.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            
+            // 1. Play Music (Triggered by user interaction)
+            bgMusic.volume = 0.5;
+            bgMusic.play().catch(error => {
+                console.log("Autoplay prevented by browser, waiting for next interaction.");
+            });
+
+            overlay.style.opacity = 0;
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                appState = 'BOOK';
+                hintText.classList.add('visible'); 
+                
+                if(bookGroup) {
+                    bookGroup.scale.set(0,0,0);
+                    let s = 0;
+                    const popIn = setInterval(() => {
+                        s += 0.05;
+                        if(s >= 1) { s = 1; clearInterval(popIn); }
+                        bookGroup.scale.set(s,s,s);
+                    }, 16);
+                }
+            }, 800);
+        });
+
+        btnToCake.addEventListener('click', () => {
+            memoryPage.classList.remove('active');
+            whiteFlash.style.transition = "opacity 0.5s"; 
+            whiteFlash.style.opacity = 1;
+            
+            setTimeout(() => {
+                appState = 'CAKE';
+                
+                // Adjust Camera for Mobile vs Desktop
+                if (window.innerWidth < 768) {
+                    camera.position.set(0, 4, 14); // Lebih jauh di HP
+                } else {
+                    camera.position.set(0, 3, 9);
+                }
+
+                warpStars.visible = false;
+                bookGroup.visible = false;
+                cakeGroup.visible = true;
+                
+                let s = 0;
+                const grow = setInterval(() => {
+                    s += 0.05;
+                    if(s >= 1) { s = 1; clearInterval(grow); celebrate(); }
+                    cakeGroup.scale.set(s,s,s);
+                    cakeGroup.position.y = Math.sin(s * Math.PI) * 0.5;
+                }, 20);
+
+                whiteFlash.style.opacity = 0;
+            }, 800);
+        });
+
+        // --- TYPEWRITER FUNCTION ---
+        function startTypewriter() {
+            // Kita parse HTML secara manual agar tag HTML tidak diketik sebagai teks
+            let i = 0;
+            const text = originalTextHTML.trim();
+            const speed = 25; // Kecepatan ketik (ms)
+            journalTextEl.innerHTML = "";
+
+            function type() {
+                if (i < text.length) {
+                    // Jika bertemu tag HTML pembuka '<'
+                    if (text.charAt(i) === '<') {
+                        let tag = '';
+                        while (text.charAt(i) !== '>' && i < text.length) {
+                            tag += text.charAt(i);
+                            i++;
+                        }
+                        tag += '>';
+                        i++;
+                        journalTextEl.innerHTML += tag;
+                    } else {
+                        journalTextEl.innerHTML += text.charAt(i);
+                        i++;
+                    }
+                    
+                    // Scroll ke bawah otomatis saat mengetik
+                    const container = document.getElementById('memory-page');
+                    container.scrollTop = container.scrollHeight;
+
+                    setTimeout(type, speed);
+                } else {
+                    // Selesai Mengetik
+                    journalTextEl.classList.remove('cursor');
+                    document.getElementById('btn-to-cake').classList.add('visible');
+                }
+            }
+            type();
+        }
+
+        // --- GAME LOGIC ---
+        btnPlayGame.addEventListener('click', () => {
+            gameOverlay.style.display = 'flex';
+            resizeGameCanvas();
+            startGame();
+        });
+
+        btnBlowCandle.addEventListener('click', () => {
+            if (flameMesh.visible) {
+                flameMesh.visible = false;
+                playTone(200, 0.3, 'noise'); 
+                confetti({
+                    particleCount: 30,
+                    spread: 20,
+                    startVelocity: 15,
+                    origin: { y: 0.4 }, 
+                    colors: ['#cccccc', '#dddddd', '#eeeeee'],
+                    gravity: 0.5,
+                    scalar: 0.8,
+                    disableForReducedMotion: true
+                });
+
+                wishTitle.innerText = "Yey! Happy Birthday!";
+                wishText.innerText = "Selamat menikmati hari spesialmu! 🍰🥳";
+                btnBlowCandle.style.display = 'none'; 
+            }
+        });
+
+        // Prank Link
+        btnHorrorGame.addEventListener('click', () => {
+             window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rickroll :D
+        });
+
+        btnCloseGame.addEventListener('click', stopGame);
+        btnQuit.addEventListener('click', stopGame);
+        btnRestart.addEventListener('click', startGame);
+
+        // Player Movement (Mouse & Touch)
+        gameCanvas.addEventListener('mousemove', (e) => {
+            if(gameRunning) playerX = e.clientX;
+        });
+        gameCanvas.addEventListener('touchmove', (e) => {
+            if(gameRunning) {
+                e.preventDefault();
+                playerX = e.touches[0].clientX;
+            }
+        }, {passive: false});
+
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            items = [];
+            scoreEl.innerText = '0';
+            gameOverPanel.style.display = 'none';
+            playerX = window.innerWidth / 2;
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function stopGame() {
+            gameRunning = false;
+            gameOverlay.style.display = 'none';
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            finalScoreEl.innerText = score;
+            gameOverPanel.style.display = 'block';
+        }
+
+        function gameWin() {
+            gameRunning = false;
+            playTone(800, 0.1, 'square');
+            setTimeout(() => playTone(1000, 0.2, 'square'), 100);
+            setTimeout(() => playTone(1200, 0.4, 'square'), 300);
+
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            setTimeout(() => {
+                window.location.href = "https://api.whatsapp.com/send/?phone=6285117767250&text=halo%20sayangkuu%20aku%20menang%20game%20nya,%20aku%20mau%20claim%20hadiahnya%20hehehe";
+            }, 1500);
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            // Draw Player
+            const playerY = gameCanvas.height - 80;
+            const playerW = 80;
+            const playerH = 60;
+            
+            ctx.font = '60px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🧺', playerX, playerY + 50);
+
+            // Spawn Items
+            if (Math.random() < 0.03) {
+                const types = [
+                    { char: '🎁', val: 10 }, 
+                    { char: '🧁', val: 1 }, 
+                    { char: '💣', val: -1 } 
+                ];
+                let type;
+                const rand = Math.random();
+                if(rand < 0.6) type = types[1]; 
+                else if(rand < 0.9) type = types[2]; 
+                else type = types[0]; 
+                
+                items.push({
+                    x: Math.random() * gameCanvas.width,
+                    y: -50,
+                    speed: Math.random() * 3 + 2,
+                    char: type.char,
+                    val: type.val
+                });
+            }
+
+            // Update Items
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                item.y += item.speed;
+
+                ctx.fillText(item.char, item.x, item.y);
+
+                if (
+                    item.y > playerY && 
+                    item.y < playerY + playerH &&
+                    item.x > playerX - playerW/2 && 
+                    item.x < playerX + playerW/2
+                ) {
+                    if (item.val === -1) {
+                        playTone(150, 0.5, 'sawtooth'); 
+                        gameOver();
+                        return;
+                    } else {
+                        score += item.val;
+                        scoreEl.innerText = score;
+                        playTone(600 + (score*10), 0.1, 'sine'); 
+                        
+                        confetti({
+                            particleCount: 5,
+                            spread: 30,
+                            startVelocity: 15,
+                            origin: { x: item.x / window.innerWidth, y: playerY / window.innerHeight }
+                        });
+
+                        if (score >= 50) { // Win condition
+                            gameWin();
+                            return;
+                        }
+                    }
+                    items.splice(i, 1);
+                    i--;
+                } else if (item.y > gameCanvas.height) {
+                    items.splice(i, 1);
+                    i--;
+                }
+            }
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- THREE JS INIT ---
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0xfff1f2, 0.02);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Camera position awal
+            if(window.innerWidth < 768) {
+                camera.position.set(0, 4, 12); // Mobile view
+            } else {
+                camera.position.set(0, 3, 9); // Desktop view
+            }
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.SoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.enableZoom = false;
+            controls.autoRotate = false; 
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xfff0dd, 1.2);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            createCuteBook();
+            createCuteCake();
+            createWarpStars(); 
+            cakeGroup.visible = false;
+            cakeGroup.scale.set(0,0,0);
+            createEmojis();
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('pointerdown', onPointerDown);
+            animate();
+        }
+
+        function createWarpStars() {
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 1000;
+            const posArray = new Float32Array(starCount * 3);
+            for(let i=0; i<starCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 50; 
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const sprite = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png');
+            const starMat = new THREE.PointsMaterial({
+                size: 0.2, color: 0xffafcc, transparent: true, opacity: 0.8, map: sprite, alphaTest: 0.5
+            });
+            warpStars = new THREE.Points(starGeo, starMat);
+            warpStars.visible = false; 
+            scene.add(warpStars);
+        }
+
+        function createCuteBook() {
+            bookGroup = new THREE.Group();
+            const coverColor = 0xffadc6; 
+            const pageColor = 0xfff0f5; 
+            const decorColor = 0xff8fab; 
+
+            const coverGeo = new THREE.BoxGeometry(3, 0.2, 4);
+            const coverMat = new THREE.MeshLambertMaterial({ color: coverColor });
+            const backCover = new THREE.Mesh(coverGeo, coverMat);
+            backCover.position.y = -0.1; backCover.castShadow = true; bookGroup.add(backCover);
+
+            const pagesGeo = new THREE.BoxGeometry(2.8, 0.5, 3.8);
+            const pagesMat = new THREE.MeshLambertMaterial({ color: pageColor });
+            const pages = new THREE.Mesh(pagesGeo, pagesMat);
+            pages.position.y = 0.25; bookGroup.add(pages);
+
+            const spineGeo = new THREE.BoxGeometry(0.4, 0.8, 4);
+            const spine = new THREE.Mesh(spineGeo, coverMat);
+            spine.position.set(-1.6, 0.2, 0); bookGroup.add(spine);
+
+            bookPivot = new THREE.Group();
+            bookPivot.position.set(-1.5, 0.6, 0); 
+            
+            const frontCover = new THREE.Mesh(coverGeo, coverMat);
+            frontCover.position.set(1.5, 0, 0); 
+            
+            const heartGroup = new THREE.Group();
+            const heartMat = new THREE.MeshLambertMaterial({ color: decorColor });
+            const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), heartMat); sphere1.position.set(-0.2, 0, 0);
+            const sphere2 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), heartMat); sphere2.position.set(0.2, 0, 0);
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.6, 16), heartMat); cone.rotation.z = Math.PI; cone.position.set(0, -0.3, 0);
+            heartGroup.add(sphere1); heartGroup.add(sphere2); heartGroup.add(cone);
+            heartGroup.rotation.x = -Math.PI / 2; heartGroup.scale.set(1.5, 1.5, 0.2); heartGroup.position.set(1.5, 0.15, 0); 
+            frontCover.add(heartGroup);
+
+            bookPivot.add(frontCover);
+            bookGroup.add(bookPivot);
+            bookGroup.rotation.x = 0.3; bookGroup.rotation.y = 0;   
+            scene.add(bookGroup);
+        }
+
+        function createCuteCake() {
+            cakeGroup = new THREE.Group();
+            const cakeMat = new THREE.MeshToonMaterial({ color: 0xffd1dc }); 
+            const creamMat = new THREE.MeshToonMaterial({ color: 0xfff0f5 }); 
+            const eyeMat = new THREE.MeshLambertMaterial({ color: 0x5a3e36 }); 
+            const cheekMat = new THREE.MeshLambertMaterial({ color: 0xff99aa }); 
+
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 1.8, 32), cakeMat); body.position.y = 0.9; body.castShadow = true; cakeGroup.add(body);
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), creamMat);
+                sphere.position.set(Math.cos(angle) * 1.9, 1.7, Math.sin(angle) * 1.9);
+                cakeGroup.add(sphere);
+            }
+            const topCream = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.2, 32), creamMat); topCream.position.y = 1.8; cakeGroup.add(topCream);
+            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.15), eyeMat); eyeL.position.set(-0.6, 1, 2); eyeL.scale.z=0.5; cakeGroup.add(eyeL);
+            const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.15), eyeMat); eyeR.position.set(0.6, 1, 2); eyeR.scale.z=0.5; cakeGroup.add(eyeR);
+            const cheekL = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.05), cheekMat); cheekL.position.set(-1.2, 0.8, 1.95); cheekL.rotation.x=1.57; cheekL.rotation.z=-0.2; cakeGroup.add(cheekL);
+            const cheekR = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.05), cheekMat); cheekR.position.set(1.2, 0.8, 1.95); cheekR.rotation.x=1.57; cheekR.rotation.z=0.2; cakeGroup.add(cheekR);
+            const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.05, 8, 16, 3.14), eyeMat); mouth.rotation.x=3.14; mouth.position.set(0, 0.9, 2); cakeGroup.add(mouth);
+
+            const candle = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.2), new THREE.MeshToonMaterial({ color: 0xaec6cf })); candle.position.y = 2.4; cakeGroup.add(candle);
+            const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.2), eyeMat); wick.position.y = 3.0; cakeGroup.add(wick);
+            flameMesh = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 8), new THREE.MeshBasicMaterial({ color: 0xffdb58 })); flameMesh.position.y = 3.25; cakeGroup.add(flameMesh);
+
+            cakeGroup.rotation.y = 0;
+            scene.add(cakeGroup);
+        }
+
+        function createEmojis() {
+            const emojis = ['🎈', '✨', '🦄', '🍭', '🧁', '🍦', '🍩', '💖', '🌸', '🎀'];
+            const container = document.getElementById('emoji-bg');
+            container.innerHTML = ''; 
+            for (let i = 0; i < 25; i++) {
+                const el = document.createElement('div');
+                el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.animationDuration = (Math.random() * 10 + 10) + 's'; 
+                el.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(el);
+            }
+        }
+
+        function onPointerDown(event) {
+            if (appState === 'INTRO' || appState === 'MEMORY') return; 
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            if (appState === 'BOOK') {
+                const intersects = raycaster.intersectObjects(bookGroup.children, true);
+                if (intersects.length > 0) {
+                    openBookAndEnterPortal();
+                }
+            }
+        }
+
+        function openBookAndEnterPortal() {
+            appState = 'PORTAL_ANIM';
+            hintText.classList.remove('visible'); 
+            playWarpSound();
+            
+            let angle = 0;
+            const openInterval = setInterval(() => {
+                angle += 0.1; 
+                bookPivot.rotation.z = angle;
+                
+                if(angle > Math.PI / 4 && !warpStars.visible) {
+                    warpStars.visible = true;
+                }
+
+                if (angle >= Math.PI / 1.6) { 
+                    clearInterval(openInterval);
+                    startWarpTransition();
+                }
+            }, 20);
+        }
+
+        function startWarpTransition() {
+            const duration = 1500;
+            const startZoom = camera.position.z;
+            const startTime = Date.now();
+
+            function warpLoop() {
+                const now = Date.now();
+                const progress = Math.min((now - startTime) / duration, 1);
+                
+                camera.position.z = startZoom - (progress * 7); 
+                
+                const positions = warpStars.geometry.attributes.position.array;
+                for(let i=2; i<positions.length; i+=3) {
+                    positions[i] += 1.5; 
+                    if(positions[i] > 10) positions[i] = -40; 
+                }
+                warpStars.geometry.attributes.position.needsUpdate = true;
+
+                if (progress < 1) {
+                    requestAnimationFrame(warpLoop);
+                } else {
+                    whiteFlash.style.opacity = 1;
+                    setTimeout(() => {
+                        appState = 'MEMORY';
+                        document.getElementById('memory-page').classList.add('active');
+                        whiteFlash.style.opacity = 0;
+                        warpStars.visible = false; 
+                        // Start Typewriter Effect here
+                        setTimeout(startTypewriter, 500);
+                    }, 500);
+                }
+            }
+            warpLoop();
+        }
+
+        function celebrate() {
+            document.getElementById('final-message').classList.add('visible');
+            document.getElementById('controls-area').classList.add('visible'); 
+            
+            controls.autoRotate = true; 
+            controls.autoRotateSpeed = 2.0;
+            
+            playTone(400, 0.1, 'square'); 
+            setTimeout(playHappyBirthday, 300);
+
+            let speed = 0.3;
+            function jump() {
+                if (speed < Math.PI) {
+                    cakeGroup.position.y = Math.abs(Math.sin(speed) * 1.5);
+                    speed += 0.1;
+                    requestAnimationFrame(jump);
+                } else {
+                    cakeGroup.position.y = 0;
+                }
+            }
+            jump();
+
+            const defaults = { spread: 360, ticks: 80, gravity: 0, decay: 0.94, startVelocity: 30, shapes: ['star', 'circle'], colors: ['#ff8fab', '#ffc2d1', '#ffd700', '#fff0f3'] };
+            function shoot() {
+                confetti({ ...defaults, particleCount: 40, scalar: 1.2 });
+                confetti({ ...defaults, particleCount: 20, scalar: 0.75 });
+            }
+            setTimeout(shoot, 0); setTimeout(shoot, 200); setTimeout(shoot, 400);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            resizeGameCanvas();
+
+            // Adjust Camera on Resize
+            if (appState === 'CAKE') {
+                 if (window.innerWidth < 768) {
+                    camera.position.z = 14;
+                } else {
+                    camera.position.z = 9;
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            const time = Date.now() * 0.001;
+
+            if (appState === 'CAKE' && flameMesh) {
+                const s = 1 + Math.sin(time * 20) * 0.1;
+                flameMesh.scale.set(s,s,s);
+            }
+            
+            if (appState === 'BOOK' && bookGroup) {
+                bookGroup.position.y = Math.sin(time) * 0.2;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
